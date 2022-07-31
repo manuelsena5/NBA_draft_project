@@ -14,7 +14,6 @@ links_df <- data.frame(html=character())  # list of links
 drafts_list <- list()
 
 
-
 #To get the draft tables form basketball reference
 
 for (i in 1:length(years)) {
@@ -25,47 +24,40 @@ for (i in 1:length(years)) {
   drafts_list <- rbind(drafts_list, paste0("draft_", years[i]))
 }
 
-#Column Names
+#Column Names and to make unique variable names
+
 
 newnames <- draft_1997[1,]
+newnames[15:18] <- list("MP.per", "PTS.per", "TRB.per", "AST.per")  
+
 
 #To replace column names 
+
+#To delete extra rows with totals and column names repetitions in each draft data frame
+#Also to replace blank spaces with NA
+
 
 for (i in 1:length(drafts_list)) {
   temp <- get(paste(drafts_list[i]))
   colnames(temp) <- newnames
   temp <- temp[-1,]
-  assign(paste0("draft_", years[i]), temp)
-}
-
-#To delete extra rows with totals and column names repetitions in each draft data frame
-#Also to replace blank spaces with NA (this converts all variables into numeric)
-
-for (i in 1:length(drafts_list)) {
-  temp <- get(paste(drafts_list[i]))
   temp <- temp %>%
     subset(Yrs != "Yrs") %>%
     subset(MP != "Totals")%>%
     na_if("")
+  newnames1 <- c(colnames(temp))
+  temp[,-3:-5] <- lapply(temp[,newnames1[-3:-5]], as.numeric)
+  temp[6:22] <- temp[6:22] %>% replace(is.na(.), 0)
   assign(paste0("draft_", years[i]), temp)
 }
-str(draft_1997)
-
-
-rm(temp)
-
-draft <-apply(draft_1997, as.numeric)
-
-sapply(draft_1997, class)
-character <- draft_1997[, 6:22]
-
-
-col(draft_1997)
-character
-
-draft_1997[ , character] <- as.data.frame(apply(draft_1997[ , character], 2, as.numeric))
 
 
 
-temp
-view(temp)
+
+
+
+
+
+
+
+
