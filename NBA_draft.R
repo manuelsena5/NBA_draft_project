@@ -15,6 +15,8 @@ links_df <- data.frame(html=character())  # list of links
 
 all_players <- data.frame(Players = character(), link = character()) #List of players of all selected drafts and links
 
+players_yrs <- data.frame()
+
 drafts_list <- list()
 
 
@@ -61,32 +63,76 @@ for (i in 1:length(drafts_list)) {
     all_players <- rbind(all_players, temp$Player[i])
     all_players <- na.omit(all_players)
     colnames(all_players) <- "Player"
-    
   }
+  
+  for (i in 1:length(temp$Player)) {
+    players_yrs <- rbind(players_yrs, temp$Yrs[i])
+    players_yrs <- na.omit(players_yrs)
+    colnames(players_yrs) <- "Yrs"
+    }
+  
 }
 
 # Since the draft table does not have defensive stats per game. Code gets player page in website to scrape them.      
 #the issue I am having right now is getting the iteration for the temp link to the current year in the loop. 
 
 
-for (k in 1:length(years)){
-  theurl2 <- paste0(link, years[k], ".html")
-  get_links <- read_html(theurl2)
+  for (k in 1:length(years)){
+    theurl2 <- paste0(link, years[k], ".html")
+    get_links <- read_html(theurl2)
   
-  for (j in 1:62) {  
-    temp_link <- get_links %>% html_nodes(paste0("tr:nth-child(", j , ") a")) 
-    if (length(temp_link) == 0) next
-    temp_link <- temp_link %>% html_attr("href") %>% .[[3]]
-    links_df <- rbind(links_df, paste0("https://www.basketball-reference.com",temp_link))
+    for (j in 1:62) {  
+      temp_link <- get_links %>% html_nodes(paste0("tr:nth-child(", j , ") a")) 
+      if (length(temp_link) == 0) next
+      temp_link <- temp_link %>% html_attr("href") %>% .[[3]]
+      links_df <- rbind(links_df, paste0("https://www.basketball-reference.com",temp_link))
   }
   
 }
-
 colnames(links_df) <- "Html_links"
 all_players <- cbind(all_players, links_df)
 
 
 
+for (i in 1:length(drafts_list)) {
+  assign(paste0("draft_", years[i]),left_join(get(paste0(drafts_list[i])),all_players, "Player"))
+
+  
+  }
+
+
+
+
+
+# def_stats <- data.frame(stl.per = double(), blk.per = double())
+# 
+# 
+
+stl.per <- c()
+# 
+for (i in 1:length(drafts_list)) {
+url2 <- read_html() 
+nba_years <- url2 %>%   html_nodes("p:nth-child(10)") %>% .[[paste0()]] %>% html_text()
+stls <- url2 %>%   html_nodes(".right:nth-child(26)") %>% .[[20]] %>% html_text()
+blks <- url2 %>%   html_nodes(".right:nth-child(27)") %>% .[[20]] %>% html_text()
+
+stl.per <- c(stl.per, stls)
+
+
+}
+ 
+
+# 
+# rm(def_blk,def_stl,draft, drafts_list)
+
+
+# ####What you are requesting is the use of assign and get, and you will find a significant amount of
+# opposition to using those functions: they almost always indicate poor design. Since the frames all 
+# look the same I suggest you look into using a list of frames: since you're likely to do the 
+# same or similar things to each frame, the use of lapply can greatly simplify 
+# the maintainability/flexibility of your code
+
+#https://stackoverflow.com/questions/17499013/how-do-i-make-a-list-of-data-frames/24376207#24376207
 
 
 
