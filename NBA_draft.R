@@ -1,3 +1,5 @@
+pack <- c("tidyverse", "rvest", "dplyr")
+install.packages(pack)
 library(tidyverse)
 library(rvest)
 library(dplyr)
@@ -22,7 +24,7 @@ for (i in 1:length(years)) {
   theurl <- paste0(link, years[i],".html")
   draft <- read_html(theurl)
   assign(paste0("draft_", years[i]), draft %>% html_nodes("table") %>% html_table() %>% .[[1]])
-    drafts_list <- rbind(drafts_list, paste0("draft_", years[i]))
+  drafts_list <- rbind(drafts_list, paste0("draft_", years[i]))
 }
 
 
@@ -40,22 +42,9 @@ newnames[15:18] <- list("MP.per", "PTS.per", "TRB.per", "AST.per")
 
 
 for (i in 1:length(drafts_list)) {
-  temp <- get(paste(drafts_list[1]))
+  temp <- get(paste(drafts_list[i]))
   colnames(temp) <- newnames
-
-  
-# Since the draft table does not have defensive stats per game. Code gets player page in website to scrape them.      
- #the issue I am having right now is getting the iteration for the temp link to the current year in the loop. 
-  
-   for (j in 1:62) {
-     
-    temp_link <- draft %>% html_nodes(paste0("tr:nth-child(", j , ") a")) 
-    if (length(temp_link) == 0) next
-    temp_link <- temp_link %>% html_attr("href") %>% .[[3]]
-    links_df <- rbind(links_df, paste0("https://www.basketball-reference.com",temp_link))
-    
-  }
-  
+ 
 #To delete extra rows with totals and column names repetitions in each draft data frame  
   
   temp <- temp[-1,]
@@ -66,34 +55,35 @@ for (i in 1:length(drafts_list)) {
   newnames1 <- c(colnames(temp))
   temp[,-3:-5] <- lapply(temp[,newnames1[-3:-5]], as.numeric)
   temp[6:22] <- temp[6:22] %>% replace(is.na(.), 0)
-  assign(paste0("draft_", years[1]), temp)
+  assign(paste0("draft_", years[i]), temp)
   
   for (i in 1:length(temp$Player)) {
     all_players <- rbind(all_players, temp$Player[i])
+    all_players <- na.omit(all_players)
     colnames(all_players) <- "Player"
+    
   }
-  colnames(links_df) <- "Html_links"
-  all_players <- cbind(all_players, links_df)
 }
 
-r
+# Since the draft table does not have defensive stats per game. Code gets player page in website to scrape them.      
+#the issue I am having right now is getting the iteration for the temp link to the current year in the loop. 
 
 
+for (k in 1:length(years)){
+  theurl2 <- paste0(link, years[k], ".html")
+  get_links <- read_html(theurl2)
+  
+  for (j in 1:62) {  
+    temp_link <- get_links %>% html_nodes(paste0("tr:nth-child(", j , ") a")) 
+    if (length(temp_link) == 0) next
+    temp_link <- temp_link %>% html_attr("href") %>% .[[3]]
+    links_df <- rbind(links_df, paste0("https://www.basketball-reference.com",temp_link))
+  }
+  
+}
 
-# for (i in 1:length(drafts_list)) {
-#   temp <- get(paste(drafts_list[i]))
-#   colnames(temp) <- newnames
-#   temp <- temp[-1,]
-#   temp <- temp %>%
-#     subset(Yrs != "Yrs") %>%
-#     subset(MP != "Totals")%>%
-#     na_if("")
-#   newnames1 <- c(colnames(temp))
-#   temp[,-3:-5] <- lapply(temp[,newnames1[-3:-5]], as.numeric)
-#   temp[6:22] <- temp[6:22] %>% replace(is.na(.), 0)
-#   assign(paste0("draft_", years[i]), temp)
-# }
-
+colnames(links_df) <- "Html_links"
+all_players <- cbind(all_players, links_df)
 
 
 
