@@ -8,16 +8,27 @@ library(dplyr)
 
 link <- "https://www.basketball-reference.com/draft/NBA_"
 
+drafts_list <- list()
 
 years <- c(1997:2017)  #years to look at
 
-links_df <- data.frame(html=character())  # list of links
+links_df <- data.frame()  # list of links
 
 all_players <- data.frame(Players = character(), link = character()) #List of players of all selected drafts and links
 
 players_yrs <- data.frame()
 
-def_stats <- data.frame(Player = character(), STL = double(), BLK = double())
+def_stats <- data.frame(Player = character(), STL.per = double(), BLK.per = double())
+
+# df_list <- list()
+# 
+# 
+# for (i in 1:length(years)) {
+#   theurl <- paste0(link, years[i],".html")
+#   draft <- read_html(theurl)
+#   df_list[[i]] <- assign(paste0("draft_", years[i]), draft %>% html_nodes("table") %>% html_table() %>% .[[1]])
+#  
+# }
 
 
 #To get the draft tables form basketball reference
@@ -85,16 +96,17 @@ for (k in 1:length(years)){
     temp_link <- get_links %>% html_nodes(paste0("tr:nth-child(", j , ") a")) 
     if (length(temp_link) == 0) next
     temp_link <- temp_link %>% html_attr("href") %>% .[[3]]
-    links_df <- rbind(links_df, "Html_links" = paste0("https://www.basketball-reference.com",temp_link))
+    links_df <- rbind(links_df, paste0("https://www.basketball-reference.com",temp_link))
   }
   
 }
 
+colnames(links_df) <- "Html_links"
 all_players <- cbind(all_players, links_df)
 
 
 #for (i in 1:length(drafts_list)) {
-  assign(paste0("draft_", years[i]),left_join(get(paste0(drafts_list[i])),all_players, "Player"))
+  #assign(paste0("draft_", years[i]),left_join(get(paste0(drafts_list[i])),all_players, "Player"))
   
   
 #}
@@ -104,7 +116,7 @@ for (i in 1:length(all_players$Html_links)) {
   player_table <- url2 %>%   html_nodes("table#per_game")
   
   if (length(player_table) == 0) {
-  player_table <- cbind("STL" = 0, BLK = 0, "Player" = all_players$Player[i])
+  player_table <- cbind("STL" = 0, "BLK" = 0, "Player" = all_players$Player[i])
   def_stats <- rbind(def_stats, player_table)
   }
   
@@ -117,7 +129,14 @@ for (i in 1:length(all_players$Html_links)) {
   }
   
 }  
+ 
+for (i in 1:length(years)) {
   
+  assign(paste0("draft_", years[i]),left_join(get(paste0("draft_", years[i])), def_stats, "Player"))
+ 
+}
+
+
 rm(deft_stats)
 
 
@@ -128,6 +147,3 @@ rm(deft_stats)
 # the maintainability/flexibility of your code
 
 #https://stackoverflow.com/questions/17499013/how-do-i-make-a-list-of-data-frames/24376207#24376207
-
-
-
