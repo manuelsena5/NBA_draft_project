@@ -17,7 +17,7 @@ all_players <- data.frame(Players = character(), link = character()) #List of pl
 
 players_yrs <- data.frame()
 
-drafts_list <- list()
+def_stats <- data.frame(Player = character(), STL = double(), BLK = double())
 
 
 #To get the draft tables form basketball reference
@@ -46,8 +46,8 @@ newnames[15:18] <- list("MP.per", "PTS.per", "TRB.per", "AST.per")
 for (i in 1:length(drafts_list)) {
   temp <- get(paste(drafts_list[i]))
   colnames(temp) <- newnames
- 
-#To delete extra rows with totals and column names repetitions in each draft data frame  
+  
+  #To delete extra rows with totals and column names repetitions in each draft data frame  
   
   temp <- temp[-1,]
   temp <- temp %>%
@@ -69,7 +69,7 @@ for (i in 1:length(drafts_list)) {
     players_yrs <- rbind(players_yrs, temp$Yrs[i])
     players_yrs <- na.omit(players_yrs)
     colnames(players_yrs) <- "Yrs"
-    }
+  }
   
 }
 
@@ -77,53 +77,48 @@ for (i in 1:length(drafts_list)) {
 #the issue I am having right now is getting the iteration for the temp link to the current year in the loop. 
 
 
-  for (k in 1:length(years)){
-    theurl2 <- paste0(link, years[k], ".html")
-    get_links <- read_html(theurl2)
+for (k in 1:length(years)){
+  theurl2 <- paste0(link, years[k], ".html")
+  get_links <- read_html(theurl2)
   
-    for (j in 1:62) {  
-      temp_link <- get_links %>% html_nodes(paste0("tr:nth-child(", j , ") a")) 
-      if (length(temp_link) == 0) next
-      temp_link <- temp_link %>% html_attr("href") %>% .[[3]]
-      links_df <- rbind(links_df, paste0("https://www.basketball-reference.com",temp_link))
+  for (j in 1:62) {  
+    temp_link <- get_links %>% html_nodes(paste0("tr:nth-child(", j , ") a")) 
+    if (length(temp_link) == 0) next
+    temp_link <- temp_link %>% html_attr("href") %>% .[[3]]
+    links_df <- rbind(links_df, "Html_links" = paste0("https://www.basketball-reference.com",temp_link))
   }
   
 }
-colnames(links_df) <- "Html_links"
+
 all_players <- cbind(all_players, links_df)
 
 
-
-for (i in 1:length(drafts_list)) {
+#for (i in 1:length(drafts_list)) {
   assign(paste0("draft_", years[i]),left_join(get(paste0(drafts_list[i])),all_players, "Player"))
-
   
-  }
-
-
-
-
-
-# def_stats <- data.frame(stl.per = double(), blk.per = double())
-# 
-# 
-
-stl.per <- c()
-# 
-for (i in 1:length(drafts_list)) {
-url2 <- read_html() 
-nba_years <- url2 %>%   html_nodes("p:nth-child(10)") %>% .[[paste0()]] %>% html_text()
-stls <- url2 %>%   html_nodes(".right:nth-child(26)") %>% .[[20]] %>% html_text()
-blks <- url2 %>%   html_nodes(".right:nth-child(27)") %>% .[[20]] %>% html_text()
-
-stl.per <- c(stl.per, stls)
-
-
-}
+  
+#}
  
-
-# 
-# rm(def_blk,def_stl,draft, drafts_list)
+for (i in 1:length(all_players$Html_links)) {
+  url2 <- read_html(all_players$Html_links[i]) 
+  player_table <- url2 %>%   html_nodes("table#per_game")
+  
+  if (length(player_table) == 0) {
+  player_table <- cbind("STL" = 0, BLK = 0, "Player" = all_players$Player[i])
+  def_stats <- rbind(def_stats, player_table)
+  }
+  
+  else {
+  
+  player_table <- player_table %>% html_table() %>% .[[1]]
+  player_table <- player_table %>% filter(Season == "Career")
+  player_table <- cbind(player_table[26:27], "Player" = all_players$Player[i])
+  def_stats <- rbind(def_stats, player_table)
+  }
+  
+}  
+  
+rm(deft_stats)
 
 
 # ####What you are requesting is the use of assign and get, and you will find a significant amount of
@@ -133,10 +128,6 @@ stl.per <- c(stl.per, stls)
 # the maintainability/flexibility of your code
 
 #https://stackoverflow.com/questions/17499013/how-do-i-make-a-list-of-data-frames/24376207#24376207
-
-
-
-
 
 
 
