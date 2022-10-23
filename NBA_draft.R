@@ -137,8 +137,51 @@ for (i in 1:length(years)) {
 }
 
 
-rm(deft_stats)
+#rm(deft_stats)
 
+
+redraft_func <- function(redraft){
+#   
+#   draft = readline(prompt = "Enter draft year:")
+#   draft = assign(paste0("draft_",draft),, temp)
+
+  temp <- redraft
+  
+  
+  #to calculate the z-score for all player stats
+  
+  temp[23] <- as.numeric(unlist(temp[23]))
+  temp[24] <- as.numeric(unlist(temp[24]))
+  temp[23:24] <- temp[23:24] %>% replace(is.na(.), 0)
+  
+  
+  temp$G.z_score <- ifelse(round((temp$G-mean(temp$G))/sd(temp$G),2) < 0.00, 0.00, 
+                           round((temp$G-mean(temp$G))/sd(temp$G),2))
+  temp$MP.per.z_score <- ifelse(round((temp$MP.per-mean(temp$MP.per))/sd(temp$MP.per),2) < 0.00, 0.00, 
+                           round((temp$MP.per-mean(temp$MP.per))/sd(temp$MP.per),2))
+  temp$PTS.per.z_score <- ifelse(round((temp$PTS.per-mean(temp$PTS.per))/sd(temp$PTS.per),2) < 0.00, 0.00, 
+                           round((temp$PTS.per-mean(temp$PTS.per))/sd(temp$PTS.per),2))
+  temp$TRB.per.z_score <- ifelse(round((temp$TRB.per-mean(temp$TRB.per))/sd(temp$TRB.per),2) < 0.00, 0.00, 
+                           round((temp$TRB.per-mean(temp$TRB.per))/sd(temp$TRB.per),2))
+  temp$AST.per.z_score <- ifelse(round((temp$AST.per-mean(temp$AST.per))/sd(temp$AST.per),2) < 0.00, 0.00, 
+                           round((temp$AST.per-mean(temp$AST.per))/sd(temp$AST.per),2))
+  temp$STL.z_score <- ifelse(round((temp$STL-mean(temp$STL))/sd(temp$STL),2) < 0.00, 0.00, 
+                           round((temp$STL-mean(temp$STL))/sd(temp$STL),2))
+  temp$BLK.z_score <- ifelse(round((temp$BLK-mean(temp$BLK))/sd(temp$BLK),2) < 0.00, 0.00, 
+                           round((temp$BLK-mean(temp$BLK))/sd(temp$BLK),2))
+  
+  temp$TOTAL.z_score <- temp$G.z_score + temp$MP.per.z_score + temp$PTS.per.z_score + temp$TRB.per.z_score +
+                            temp$AST.per.z_score + temp$STL.z_score + temp$BLK.z_score 
+  
+  
+  temp <- temp[order(temp$TOTAL.z_score, decreasing = TRUE),]
+  
+ view(temp)
+  
+}
+  
+
+redraft_func(draft_2003)
 
 # ####What you are requesting is the use of assign and get, and you will find a significant amount of
 # opposition to using those functions: they almost always indicate poor design. Since the frames all 
